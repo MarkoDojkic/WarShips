@@ -8,7 +8,7 @@ package markodojkic.warships;
 public class SmallCargo extends Cargo{
 
     public SmallCargo(int speed) {
-        super(100, speed, 0, 1000);
+        super(100, speed, 0, 4000);
     }
 
     @Override

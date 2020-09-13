@@ -25,9 +25,4 @@ public abstract class BattleShip extends Ship{
         this.setSpeed(speed);
         this.setShield(shield);
     }
-
-    @Override
-    public String toString() {
-        return "BattleShip@" + this.getClass().hashCode();
-    }
 }

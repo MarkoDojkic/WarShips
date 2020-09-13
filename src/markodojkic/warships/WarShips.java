@@ -1,12 +1,12 @@
 package markodojkic.warships;
 
-import java.util.Comparator;
 import java.util.HashMap;
 
 /**
  * @author Марко Дојкић
  */
 
+@SuppressWarnings("ALL")
 public class WarShips {
 
     public static globalVariables gVars = new globalVariables();
@@ -21,11 +21,6 @@ public class WarShips {
         } else {
             System.out.println("\nNew game started! You can exit game at any time by typing -1! - WarShips by Marko Dojkić");
             gVars.inGame = true;
-            gVars.commandShips = 0;
-            gVars.smallShips = 0;
-            gVars.bigShips = 0;
-            gVars.smallCargos = 0;
-            gVars.bigCargos = 0;
             gVars.sShips.clear();
             gVars.bCargos.clear();
             gVars.bShips.clear();
@@ -34,36 +29,38 @@ public class WarShips {
         }
     }
 
-    public static void createObjects(int number, String className) {
+    public static void createShips(int number, String className, CommandShip targetCShip) {
         for (int i = 0; i < number; i++) {
-
             if (autoPopulate) //for ship automatic creation
-                gVars.currentUserInput = Integer.toString((int) Math.ceil(Math.random() * 19));
+                gVars.currentUserInput = Integer.toString((int) Math.ceil(Math.random() * 19 + 1));
             else {
-                System.out.print("Enter the speed of " + (i + 1) + ". " + className + " (integer between 1 and " + Integer.MAX_VALUE + "): ");
-                checkUserInput(1, Integer.MAX_VALUE, -1);
+                System.out.print("Enter the speed of " + (i + 1) + ". " + className + " (integer between 1 and 20): ");
+                checkUserInput(1, 20, -1);
             }
-
+            String id;
             switch (className) {
                 case "SmallShip":
-                    SmallShip newSShip = new SmallShip(Integer.parseInt(gVars.currentUserInput));
-                    gVars.sShips.put("@" + System.identityHashCode(newSShip), newSShip);
+                    id = "SmallShip #" + (gVars.sShips.size()+1);
+                    gVars.sShips.put(id, new SmallShip(Integer.parseInt(gVars.currentUserInput)));
+                    targetCShip.getsBShips().add(id);
                     break;
                 case "BigShip":
-                    BigShip newBShip = new BigShip(Integer.parseInt(gVars.currentUserInput));
-                    gVars.bShips.put("@" + System.identityHashCode(newBShip), newBShip);
+                    id = "BigShip #" + (gVars.bShips.size()+1);
+                    gVars.bShips.put(id, new BigShip(Integer.parseInt(gVars.currentUserInput)));
+                    targetCShip.getbBShips().add(id);
                     break;
                 case "CommandShip":
-                    CommandShip newCShip = new CommandShip(Integer.parseInt(gVars.currentUserInput));
-                    gVars.cShips.put("@" + System.identityHashCode(newCShip), newCShip);
+                    gVars.cShips.put("Player #" + (i + 1), new CommandShip(Integer.parseInt(gVars.currentUserInput)));
                     break;
                 case "SmallCargo":
-                    SmallCargo newSCargo = new SmallCargo(Integer.parseInt(gVars.currentUserInput));
-                    gVars.sCargos.put("@" + System.identityHashCode(newSCargo), newSCargo);
+                    id = "SmallCargo #" + (gVars.sCargos.size()+1);
+                    gVars.sCargos.put(id, new SmallCargo(Integer.parseInt(gVars.currentUserInput)));
+                    targetCShip.getsCargos().add(id);
                     break;
                 case "BigCargo":
-                    BigCargo newBCargo = new BigCargo(Integer.parseInt(gVars.currentUserInput));
-                    gVars.bCargos.put("@" + System.identityHashCode(newBCargo), newBCargo);
+                    id = "BigCargo #" + (gVars.bCargos.size()+1);
+                    gVars.bCargos.put(id, new BigCargo(Integer.parseInt(gVars.currentUserInput)));
+                    targetCShip.getbCargos().add(id);
                     break;
             }
         }
@@ -89,169 +86,157 @@ public class WarShips {
         }
     }
 
-    public static boolean checkCargo(CommandShip cargoCS) {
-        return cargoCS.getFleet().stream().anyMatch((checkingShip) -> ((checkingShip.getClass().getTypeName().endsWith("BigCargo") && gVars.bCargos.containsKey("@" + System.identityHashCode(checkingShip))) || (checkingShip.getClass().getTypeName().endsWith("SmallCargo") && gVars.sCargos.containsKey("@" + System.identityHashCode(checkingShip)))));
-    }
+    public static void commitAttack(BattleShip atkShip, String defShip_id) {
+        CommandShip defShip = gVars.cShips.get(defShip_id);
+        String defendingShip_id = null;
+        if(!defShip.getsCargos().isEmpty()){
 
-    public static void commitAttack(BattleShip atkShip, CommandShip defShip) {
-        //def ship fleet to individual ships
+            System.out.println("**Your opponent has some small cargo ships, they need to be destroyed first!**");
+            if(defShip.getsCargos().size() == 1) defendingShip_id = defShip.getsCargos().get(0);
+            else {
+                System.out.print("Enter number of small cargo ship [0-" + defShip.getsCargos().size() + "]: ");
+                checkUserInput(0,defShip.getsCargos().size()-1,-1);
+                defendingShip_id = defShip.getsCargos().get(Integer.parseInt(gVars.currentUserInput));
+            }
 
-        if (defShip.getFleet().isEmpty()) { //attack commandship itself
+            if (atkShip.getSpeed() < gVars.sCargos.get(defendingShip_id).getSpeed()) System.out.println("---Attack failed, your ship were too slow!---");
+            else {
+
+                int oldHealth = gVars.sCargos.get(defendingShip_id).getHealth();
+
+                for (int i = 0; i <= (atkShip.getSpeed() - gVars.sCargos.get(defendingShip_id).getSpeed()); i++) {
+                    atkShip.Attack(gVars.sCargos.get(defendingShip_id));
+                }
+                System.out.println("+++Attack successfull - Dealt damage: " + (oldHealth - gVars.sCargos.get(defendingShip_id).getHealth()) + "+++");
+                if (gVars.sCargos.get(defendingShip_id).getHealth() <= 0) {
+                    try {
+                        if(!autoPopulate) Thread.sleep(gVars.sCargos.get(defendingShip_id).getCapacity()); //destroying after time based on capacity
+                        if(defShip.getsCargos().size() == 1) System.out.println("***" + defShip.getsCargos().get(0) + " is destroyed!***");
+                        else System.out.println("***" + defShip.getsCargos().get(Integer.parseInt(gVars.currentUserInput)) + " is destroyed!***");
+                        defShip.getsCargos().remove(defendingShip_id);
+                        gVars.sCargos.remove(defendingShip_id);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        else if(!defShip.getbCargos().isEmpty()){
+            System.out.println("**Your opponent has some big cargo ships, they need to be destroyed first!**");
+            if(defShip.getbCargos().size() == 1) defendingShip_id = defShip.getbCargos().get(0);
+            else {
+                System.out.print("Enter number of small cargo ship [0-" + defShip.getsCargos().size());
+                checkUserInput(0,defShip.getsCargos().size()-1,-1);
+                defendingShip_id = defShip.getbCargos().get(Integer.parseInt(gVars.currentUserInput));
+            }
+
+            if (atkShip.getSpeed() < gVars.bCargos.get(defendingShip_id).getSpeed()) System.out.println("---Attack failed, your ship were too slow!---");
+            else {
+
+                int oldHealth = gVars.bCargos.get(defendingShip_id).getHealth();
+
+                for (int i = 0; i <= (atkShip.getSpeed() - gVars.bCargos.get(defendingShip_id).getSpeed()); i++) {
+                    atkShip.Attack(gVars.bCargos.get(defendingShip_id));
+                }
+                System.out.println("+++Attack successfull - Dealt damage: " + (oldHealth - gVars.bCargos.get(defendingShip_id).getHealth()) + "+++");
+                if (gVars.bCargos.get(defendingShip_id).getHealth() <= 0) {
+                    try {
+                        if(!autoPopulate) Thread.sleep(gVars.bCargos.get(defendingShip_id).getCapacity()); //destroying after time based on capacity
+                        if(defShip.getbCargos().size() == 1) System.out.println("***" + defShip.getbCargos().get(0) + " is destroyed!***");
+                        else System.out.println("***" + defShip.getbCargos().get(Integer.parseInt(gVars.currentUserInput)) + " is destroyed!***");
+                        defShip.getbCargos().remove(defendingShip_id);
+                        gVars.bCargos.remove(defendingShip_id);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+        else if(!defShip.getsBShips().isEmpty()){
+            System.out.println("Your opponent has some small battle ships, they need to be destroyed first!");
+            if(defShip.getsBShips().size() == 1) defendingShip_id = defShip.getsBShips().get(0);
+            else {
+                System.out.print("Enter number of small battle ship [0-" + defShip.getsBShips().size());
+                checkUserInput(0,defShip.getsCargos().size()-1,-1);
+                defendingShip_id = defShip.getsBShips().get(Integer.parseInt(gVars.currentUserInput));
+            }
+
+            if (atkShip.getSpeed() < gVars.sShips.get(defendingShip_id).getSpeed()) System.out.println("---Attack failed, your ship were too slow!---");
+            else {
+
+                int oldHealth = gVars.sShips.get(defendingShip_id).getHealth();
+
+                for (int i = 0; i <= (atkShip.getSpeed() - gVars.sShips.get(defendingShip_id).getSpeed()); i++) {
+                    atkShip.Attack(gVars.sShips.get(defendingShip_id));
+                }
+                System.out.println("+++Attack successfull - Dealt damage: " + (oldHealth - gVars.sShips.get(defendingShip_id).getHealth()) + "+++");
+                if (gVars.sShips.get(defendingShip_id).getHealth() <= 0) {
+                    if(defShip.getsBShips().size() == 1) System.out.println("***" + defShip.getsBShips().get(0) + " is destroyed!***");
+                    else System.out.println("***" + defShip.getsBShips().get(Integer.parseInt(gVars.currentUserInput)) + " is destroyed!***");
+                    defShip.getsBShips().remove(defendingShip_id);
+                    gVars.sShips.remove(defendingShip_id);
+                }
+            }
+        }
+        else if(!defShip.getbBShips().isEmpty()){
+            System.out.println("Your opponent has some big battle ships, they need to be destroyed first!");
+            if(defShip.getbBShips().size() == 1) defendingShip_id = defShip.getbBShips().get(0);
+            else {
+                System.out.print("Enter number of big battle ship [0-" + defShip.getsBShips().size());
+                checkUserInput(0,defShip.getbBShips().size()-1,-1);
+                defendingShip_id = defShip.getbBShips().get(Integer.parseInt(gVars.currentUserInput));
+            }
+
+            if (atkShip.getSpeed() < gVars.bShips.get(defendingShip_id).getSpeed()) System.out.println("---Attack failed, your ship were too slow!---");
+            else {
+
+                int oldHealth = gVars.bShips.get(defendingShip_id).getHealth();
+
+                for (int i = 0; i <= (atkShip.getSpeed() - gVars.bShips.get(defendingShip_id).getSpeed()); i++) {
+                    atkShip.Attack(gVars.bShips.get(defendingShip_id));
+                }
+                System.out.println("+++Attack successfull - Dealt damage: " + (oldHealth - gVars.bShips.get(defendingShip_id).getHealth()) + "+++");
+                if (gVars.bShips.get(defendingShip_id).getHealth() <= 0) {
+                    if(defShip.getbBShips().size() == 1) System.out.println("***" + defShip.getbBShips().get(0) + " is destroyed!***");
+                    else System.out.println("***" + defShip.getbBShips().get(Integer.parseInt(gVars.currentUserInput)) + " is destroyed!***");
+                    defShip.getbBShips().remove(defendingShip_id);
+                    gVars.bShips.remove(defendingShip_id);
+                }
+            }
+        }
+        else {
             if (atkShip.getSpeed() < defShip.getSpeed()) {
-                System.out.println("Attack failed, your ship were too slow!");
+                System.out.println("---Attack failed, your ship were too slow!---");
             } else {
                 int oldHealth = defShip.getHealth();
                 for (int i = 0; i <= (atkShip.getSpeed() - defShip.getSpeed()); i++) {
                     atkShip.Attack(defShip);
                 }
-                System.out.println("Attack successfull - Dealt damage: " + (oldHealth - defShip.getHealth()));
+                System.out.println("+++Attack successfull - Dealt damage: " + (oldHealth - defShip.getHealth()) + "+++");
                 if (defShip.getHealth() <= 0) {
-                    System.out.println(System.identityHashCode(defShip) + " is destroyed! Player eliminated!");
-                    gVars.rangList.add("ID: " + System.identityHashCode(defShip));
-                    gVars.commandShips--;
-                    gVars.cShips.remove("@" + System.identityHashCode(defShip));
-                    gVars.cShipsArray.remove(defShip);
+                    System.out.println("***"+ defShip_id + " 's ship is destroyed! Player eliminated!***");
+                    gVars.rangList.add(defShip_id);
+                    gVars.cShips.remove(defShip_id);
                 }
             }
         }
-        else if (checkCargo(defShip)) { //firstly attack cargo ships
-            System.out.println("Your opponent has some cargo ships, they need to be destroyed first!");
-            gVars.availableShipsToAttack.clear();
-            defShip.getFleet().stream().filter((cS) -> (cS.getClass().getTypeName().endsWith("SmallCargo") || cS.getClass().getTypeName().endsWith("BigCargo"))).peek((cS) -> gVars.availableShipsToAttack.add(cS)).forEachOrdered((cS) -> System.out.println(cS.toString().split("@")[1] + " (Health: " + cS.getHealth() + ")"));
-            if (gVars.availableShipsToAttack.size() == 1) {
-                Cargo cShip = (Cargo) gVars.availableShipsToAttack.get(0);
+    }
 
-                if (atkShip.getSpeed() < cShip.getSpeed()) {
-                    System.out.println("Attack failed, your ship were too slow!");
-                } else {
-
-                    int oldHealth = cShip.getHealth();
-
-                    for (int i = 0; i <= (atkShip.getSpeed() - cShip.getSpeed()); i++) {
-                        atkShip.Attack(cShip);
-                    }
-                    System.out.println("Attack successfull - Dealt damage: " + (oldHealth - cShip.getHealth()));
-                    if (cShip.getHealth() <= 0) {
-                        try {
-                            Thread.sleep(cShip.getCapacity() * 1000); //attack is waiting to finish based on capacity
-                            System.out.println(cShip.getClass().getSimpleName()+ " is destroyed!");
-                            defShip.getFleet().remove(cShip);
-                            switch (cShip.toString().substring(0, cShip.toString().length() - 1)) {
-                                case "SmallCargo":
-                                    gVars.sCargos.remove("@" + System.identityHashCode(cShip));
-                                    gVars.smallCargos--;
-                                    break;
-                                case "BigCargo":
-                                    gVars.bCargos.remove("@" + System.identityHashCode(cShip));
-                                    gVars.bigCargos--;
-                                    break;
-                            }
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-
-            }
-            else {
-                System.out.print("Enter number of cargo ship [0-" + (gVars.availableShipsToAttack.size() - 1) + "]: ");
-                checkUserInput(0, gVars.availableShipsToAttack.size() - 1, -1);
-                Cargo cShip = (Cargo) gVars.availableShipsToAttack.get(Integer.parseInt(gVars.currentUserInput));
-                if (atkShip.getSpeed() < cShip.getSpeed()) {
-                    System.out.println("Attack failed, your ship were too slow!");
-                } else {
-
-                    int oldHealth = cShip.getHealth();
-
-                    for (int i = 0; i <= (atkShip.getSpeed() - cShip.getSpeed()); i++) {
-                        atkShip.Attack(cShip);
-                    }
-                    System.out.println("Attack successfull - Dealt damage: " + (oldHealth - cShip.getHealth()));
-                    if (cShip.getHealth() <= 0) {
-                        try {
-                            Thread.sleep(cShip.getCapacity() * 1000);
-                            System.out.println(cShip.getClass().getSimpleName()+ " is destroyed!");
-                            defShip.getFleet().remove(cShip);
-                            switch (cShip.toString().substring(0, cShip.toString().length() - 1)) {
-                                case "SmallCargo":
-                                    gVars.sCargos.remove("@" + System.identityHashCode(cShip));
-                                    gVars.smallCargos--;
-                                    break;
-                                case "BigCargo":
-                                    gVars.bCargos.remove("@" + System.identityHashCode(cShip));
-                                    gVars.bigCargos--;
-                                    break;
-                            }
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
+    public static void printOtherPlayers(String current) {
+        System.out.println("\n--Players in game:--");
+        for(String p_id : gVars.cShips.keySet()){
+            if(current!=p_id) System.out.println(p_id + ":" + gVars.cShips.get(p_id).toString());
         }
-        else { //cargo ships destroyed - attack battleships
-            System.out.println("Your opponent has some battle ships, they need to be destroyed first!");
-            gVars.availableShipsToAttack.clear();
-            defShip.getFleet().stream().filter((bS) -> (bS.getClass().getTypeName().endsWith("SmallShip") || bS.getClass().getTypeName().endsWith("BigShip"))).peek((bS) -> gVars.availableShipsToAttack.add(bS)).forEachOrdered((bS) -> System.out.println(bS.toString().split("@")[1]  + " (Health: " + bS.getHealth() + ")"));
-            if (gVars.availableShipsToAttack.size() == 1) {
-                BattleShip bShip = (BattleShip) gVars.availableShipsToAttack.get(0);
+    }
 
-                if (atkShip.getSpeed() < bShip.getSpeed()) {
-                    System.out.println("Attack failed, your ship were too slow!");
-                } else {
-
-                    int oldHealth = bShip.getHealth();
-                    for (int i = 0; i <= (atkShip.getSpeed() - bShip.getSpeed()); i++) {
-                        atkShip.Attack(bShip);
-                    }
-                    System.out.println("Attack successfull - Dealt damage: " + (oldHealth - bShip.getHealth()));
-                    if (bShip.getHealth() <= 0) {
-                        defShip.getFleet().remove(bShip);
-                        System.out.println(bShip.getClass().getSimpleName()+ " is destroyed!");
-                        switch (bShip.toString().substring(0, bShip.toString().length() - 1)) {
-                            case "SmallShip":
-                                gVars.sShips.remove("@" + System.identityHashCode(bShip));
-                                gVars.smallShips--;
-                                break;
-                            case "BigShip":
-                                gVars.bShips.remove("@" + System.identityHashCode(bShip));
-                                gVars.bigShips--;
-                                break;
-                        }
-                    }
-                }
-
-            } else {
-                System.out.print("Enter number of battle ship [0-" + (gVars.availableShipsToAttack.size() - 1) + "]: ");
-                checkUserInput(0, gVars.availableShipsToAttack.size() - 1, -1);
-                BattleShip bShip = (BattleShip) gVars.availableShipsToAttack.get(Integer.parseInt(gVars.currentUserInput));
-                if (atkShip.getSpeed() < bShip.getSpeed()) {
-                    System.out.println("Attack failed, your ship were too slow!");
-                } else {
-
-                    int oldHealth = bShip.getHealth();
-                    for (int i = 0; i <= (atkShip.getSpeed() - bShip.getSpeed()); i++) {
-                        atkShip.Attack(bShip);
-                    }
-                    System.out.println("Attack successfull - Dealt damage: " + (oldHealth - bShip.getHealth()));
-                    if (bShip.getHealth() <= 0) {
-                        defShip.getFleet().remove(bShip);
-                        System.out.println(bShip.getClass().getSimpleName()+ " is destroyed!");
-                        switch (bShip.toString().substring(0, bShip.toString().length() - 1)) {
-                            case "SmallShip":
-                                gVars.sShips.remove("@" + System.identityHashCode(bShip));
-                                gVars.smallShips--;
-                                break;
-                            case "BigShip":
-                                gVars.bShips.remove("@" + System.identityHashCode(bShip));
-                                gVars.bigShips--;
-                                break;
-                        }
-                    }
-                }
-            }
+    public static void checkIfCommandShipExists(String current){
+        gVars.currentUserInput = null;
+        if(autoPopulate) gVars.currentUserInput = Integer.toString((int) Math.ceil(Math.random()*gVars.cShips.size()+1));
+        else gVars.currentUserInput = gVars.inputScanner.nextLine();
+        if(!gVars.cShips.containsKey("Player #" + Integer.parseInt(gVars.currentUserInput)) || current == "Player #" + Integer.parseInt(gVars.currentUserInput)){
+            System.out.print("Invalid command ship id. Enter again: ");
+            checkIfCommandShipExists(current);
         }
-
     }
 
     public static void main(String[] args) {
@@ -263,90 +248,89 @@ public class WarShips {
             System.out.println("\nLet`s firstly create command ships!");
             System.out.print("Enter number of command ships in game (a.k.a players) [2+]: ");
             checkUserInput(2, Integer.MAX_VALUE, -1);
-            gVars.commandShips = Integer.parseInt(gVars.currentUserInput);
+            int players = Integer.parseInt(gVars.currentUserInput);
+
             System.out.print("If you want to create ships automatically type 1 and hit enter: ");
             gVars.currentUserInput = gVars.inputScanner.nextLine();
             if (gVars.currentUserInput.matches("^1$")) autoPopulate = true;
 
             gVars.currentUserInput = null;
-            createObjects(gVars.commandShips, "CommandShip");
+            createShips(players, "CommandShip", null);
 
             for (HashMap.Entry<String, CommandShip> currentCShip : gVars.cShips.entrySet()) {
-                System.out.println("\nNow let`s create small battle ships for " + currentCShip.getValue().toString() + ". command ship!");
-                System.out.print("Enter number of small battle ships [1-15]: ");
-                System.out.print(autoPopulate);
+                if(!autoPopulate) System.out.println("\nNow let`s create small battle ships for " + currentCShip.getValue().toString() + ". command ship!");
+                if(!autoPopulate) System.out.print("Enter number of small battle ships [1-15]: ");
                 checkUserInput(1, 15, -1);
-                gVars.smallShips = Integer.parseInt(gVars.currentUserInput);
-                createObjects(gVars.smallShips, "SmallShip");
-                for (HashMap.Entry<String, SmallShip> fShip : gVars.sShips.entrySet()) {
-                    currentCShip.getValue().assignToFleet(fShip.getValue());
-                }
-                System.out.println("\nNow let`s create big battle ships for " + currentCShip.getValue().toString() + ". command ship!");
-                System.out.print("Enter number of big battle ships [1-5]: ");
+                createShips(Integer.parseInt(gVars.currentUserInput), "SmallShip", currentCShip.getValue());
+
+                if(!autoPopulate) System.out.println("\nNow let`s create big battle ships for " + currentCShip.getValue().toString() + ". command ship!");
+                if(!autoPopulate) System.out.print("Enter number of big battle ships [1-5]: ");
                 checkUserInput(1, 5, -1);
-                gVars.bigShips = Integer.parseInt(gVars.currentUserInput);
-                createObjects(gVars.bigShips, "BigShip");
-                for (HashMap.Entry<String, BigShip> fShip : gVars.bShips.entrySet()) {
-                    currentCShip.getValue().assignToFleet(fShip.getValue());
-                }
-                System.out.println("\nNow let`s create small cargo ships for " + currentCShip.getValue().toString() + ". command ship!");
-                System.out.print("Enter number of small cargo ships [1-10]: ");
+                createShips(Integer.parseInt(gVars.currentUserInput), "BigShip",currentCShip.getValue());
+
+                if(!autoPopulate) System.out.println("\nNow let`s create small cargo ships for " + currentCShip.getValue().toString() + ". command ship!");
+                if(!autoPopulate) System.out.print("Enter number of small cargo ships [1-10]: ");
                 checkUserInput(1, 10, -1);
-                gVars.smallCargos = Integer.parseInt(gVars.currentUserInput);
-                createObjects(gVars.smallCargos, "SmallCargo");
-                for (HashMap.Entry<String, SmallCargo> fShip : gVars.sCargos.entrySet()) {
-                    currentCShip.getValue().assignToFleet(fShip.getValue());
-                }
-                System.out.println("\nNow let`s create big cargo ships for " + currentCShip.getValue().toString() + ". command ship!");
-                System.out.print("Enter number of big cargo ships [1-3]: ");
+                createShips(Integer.parseInt(gVars.currentUserInput), "SmallCargo",currentCShip.getValue());
+
+                if(!autoPopulate) System.out.println("\nNow let`s create big cargo ships for " + currentCShip.getValue().toString() + ". command ship!");
+                if(!autoPopulate) System.out.print("Enter number of big cargo ships [1-3]: ");
                 checkUserInput(1, 3, -1);
-                gVars.bigCargos = Integer.parseInt(gVars.currentUserInput);
-                createObjects(gVars.bigCargos, "BigCargo");
-                for (HashMap.Entry<String, BigCargo> fShip : gVars.bCargos.entrySet()) {
-                    currentCShip.getValue().assignToFleet(fShip.getValue());
-                }
-            }
-            autoPopulate = false;
-            System.out.println("\nPlayers in game:");
-
-            for (HashMap.Entry<String, CommandShip> currentCShip : gVars.cShips.entrySet()) {
-                System.out.println(currentCShip.getValue().toString());
-                currentCShip.getValue().getFleet().sort(Comparator.comparingInt(Ship::getSpeed));
+                createShips(Integer.parseInt(gVars.currentUserInput), "BigCargo", currentCShip.getValue());
             }
 
-            gVars.cShipsArray.addAll(gVars.cShips.values());
-            gVars.cShipsArray.sort(Comparator.comparingInt(CommandShip::getSpeed).reversed());
+            System.out.print("If you wanna computer play game by itself input 1 (otherwise click enter): ");
+            gVars.currentUserInput = gVars.inputScanner.nextLine();
+            if(gVars.currentUserInput == null) autoPopulate = false;
 
-            while (gVars.commandShips != 1) {
-                for (CommandShip userCommandShip : gVars.cShipsArray) {
-                    for (Ship attackingShip : userCommandShip.getFleet()) {
-                        if (!attackingShip.getClass().getName().endsWith("Cargo")) { //cargo ships cannot attack
-                            System.out.println("---Player with ID: " + System.identityHashCode(attackingShip) + " is attacking!---");
-                            for (CommandShip otherCommandShip : gVars.cShipsArray) {
-                                if (userCommandShip != otherCommandShip) {
-                                    System.out.println(System.identityHashCode(otherCommandShip) + " (Remaining ships in fleet: " + otherCommandShip.getFleet().size() + "): " + gVars.cShipsArray.indexOf(otherCommandShip));
-                                }
-                            }
+            printOtherPlayers(null);
 
-                            int id;
+            while (gVars.cShips.size() != 1) {
+                for (String userCommandShip : gVars.cShips.keySet()) {
 
-                            if(gVars.commandShips == 2) id = 0; //only two players (attack other ship automatically)
+                    System.out.println("*****" + userCommandShip + " is attacking!*****");
 
-                            else {
-                                System.out.print("Enter number of ship to attack: ");
-                                checkUserInput(0, gVars.commandShips - 1, gVars.cShipsArray.indexOf(userCommandShip));
-                                id = Integer.parseInt(gVars.currentUserInput);
-                            }
-                            CommandShip defendingShip = gVars.cShips.get("@" + System.identityHashCode(gVars.cShipsArray.get(id)));
-                            System.out.println("List of  " + defendingShip.toString() + " ships:");
-                            commitAttack((BattleShip) attackingShip, defendingShip);
+                    /*
+                    TODO: FIX:
+
+                    Exception in thread "main" java.util.ConcurrentModificationException
+                        at java.util.ArrayList$Itr.checkForComodification(ArrayList.java:909)
+                        at java.util.ArrayList$Itr.next(ArrayList.java:859)
+                        at markodojkic.warships.WarShips.main(WarShips.java:302)
+                     */
+
+                    for(String userSmallBattleShip : gVars.cShips.get(userCommandShip).getsBShips()){
+                        System.out.println("Attacking with " + userSmallBattleShip);
+                        if(gVars.cShips.size() == 2){
+                            if(userCommandShip == "Player #1") commitAttack(gVars.sShips.get(userSmallBattleShip), "Player #2");
+                            else commitAttack(gVars.sShips.get(userSmallBattleShip), "Player #1");
+                        }
+                        else {
+                            if(!autoPopulate) printOtherPlayers(userCommandShip);
+                            System.out.print("Enter number of ship to attack: ");
+                            checkIfCommandShipExists(userCommandShip);
+                            commitAttack(gVars.sShips.get(userSmallBattleShip), "Player #" + gVars.currentUserInput);
+                        }
+                    }
+
+                    for(String userBigBattleShip : gVars.cShips.get(userCommandShip).getbBShips()){
+                        System.out.println("Attacking with " + userBigBattleShip);
+                        if(gVars.cShips.size() == 2){
+                            if(userCommandShip == "Player #1") commitAttack(gVars.bShips.get(userBigBattleShip), "Player #2");
+                            else commitAttack(gVars.bShips.get(userBigBattleShip), "Player #1");
+                        }
+                        else {
+                            if(!autoPopulate) printOtherPlayers(userCommandShip);
+                            System.out.print("Enter number of ship to attack: ");
+                            checkIfCommandShipExists(userCommandShip);
+                            commitAttack(gVars.bShips.get(userBigBattleShip), "Player #" + gVars.currentUserInput);
                         }
                     }
                 }
             }
 
             //GAME OVER SHOW RANG LIST
-            gVars.rangList.add(gVars.cShipsArray.get(0).toString());
+            gVars.rangList.add(gVars.cShips.keySet().toArray()[0].toString().split("cs_")[1]);
             System.out.println("\n GAME OVER:\nResults:");
             int userRank = 1;
             for (String user : gVars.rangList) {
@@ -356,8 +340,6 @@ public class WarShips {
             System.out.print("\n<Press enter to return to main menu>: ");
             gVars.inputScanner.nextLine();
             mainMenu();
-
-            //TODO: FIX System.identityHashCode (ITS NOT UNIQUE!)
         }
     }
 }

@@ -21,6 +21,7 @@ public class WarShips {
         gVars.currentUserInput = gVars.inputScanner.nextLine();
 
         if (!gVars.currentUserInput.matches("^1$")) {
+            System.out.print("\u001B[0m"); //revert to original color
             System.out.println("Thanks for playing WarShips by Marko Dojkić, hope to see you again soon.");
             System.exit(0);
         } else {

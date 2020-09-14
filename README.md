@@ -27,4 +27,4 @@ Ships info: (Health, Speed, Damage, Shield, Capacity*)
 - BigBattleShip  (500, <user_input>, 100, 100, N/A)
 - CommandShip (1000, <user_input>, 150, 200 N/A)
 
-* Used to create delay of 4 or 10 seconds when cargo ship is destroyed.
+*Used to create delay of 4 or 10 seconds when cargo ship is destroyed.

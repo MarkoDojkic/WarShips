@@ -10,7 +10,7 @@ public class CommandShip extends BattleShip{
     private final ArrayList<String> sCargos,bCargos,sBShips,bBShips;
 
     public CommandShip(int speed) {
-        super(1000, speed, 150, 20);
+        super(1000, speed, 150, 200);
         this.sCargos = new ArrayList<>();
         this.bCargos = new ArrayList<>();
         this.sBShips = new ArrayList<>();
@@ -34,13 +34,8 @@ public class CommandShip extends BattleShip{
     }
 
     @Override
-    public void getDamage(int damage) {
-        super.getDamage(damage-this.getShield());
-    }
-
-    @Override
     public String toString() {
         String fleet = "SmallCargoShips: " + this.sCargos.size() + ", BigCargoShips: " + this.bCargos.size() + ", SmallBattleShips: " + this.sBShips.size() + ", BigBattleShips: " + this.bBShips.size();
-        return (" Health: " + this.getHealth() + " Shield: " + this.getShield() + " Damage: " + this.getDamage() + " Speed: " + this.getSpeed() + " Fleet: " + fleet.toString() + ")\n");
+        return (" Health: " + this.getHealth() + " Shield: " + this.getShield() + " Damage: " + this.getDamage() + " Speed: " + this.getSpeed() + " Fleet: " + fleet + ")\n");
     }
 }

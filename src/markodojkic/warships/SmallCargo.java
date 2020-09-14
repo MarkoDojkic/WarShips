@@ -8,11 +8,6 @@ package markodojkic.warships;
 public class SmallCargo extends Cargo{
 
     public SmallCargo(int speed) {
-        super(100, speed, 0, 4000);
-    }
-
-    @Override
-    public String toString() {
-        return "SmallCargo@" + System.identityHashCode(this);
+        super(100, speed, 20, 4000);
     }
 }

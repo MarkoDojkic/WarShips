@@ -1,64 +1,97 @@
 package markodojkic.warships;
 
-import java.util.HashMap;
+import java.util.*;
 
 /**
  * @author Марко Дојкић
+ * Project started 11/2019
  */
 
 @SuppressWarnings("ALL")
 public class WarShips {
 
-    public static globalVariables gVars = new globalVariables();
-    public static boolean autoPopulate = false;
+    private static globalVariables gVars;
+    private static boolean autoPopulate;
+    private static String currentPlayerColor = "";
 
     public static void mainMenu() {
+        System.out.print("\u001B[35m");
         System.out.println("\nYou`re currently in MainMenu - WarShips by Marko Dojkić");
-        System.out.print("Type 1 and hit enter to start new game: ");
+        System.out.print("Type 1 and hit enter to start new game or -1 to quit: ");
         gVars.currentUserInput = gVars.inputScanner.nextLine();
+
         if (!gVars.currentUserInput.matches("^1$")) {
+            System.out.println("Thanks for playing WarShips by Marko Dojkić, hope to see you again soon.");
             System.exit(0);
         } else {
-            System.out.println("\nNew game started! You can exit game at any time by typing -1! - WarShips by Marko Dojkić");
+            System.out.print("\u001B[36m"); //cyan coloring when creating ships
+            System.out.println("\n!!!New game started! You can exit at any time by typing -1!!!");
             gVars.inGame = true;
+            autoPopulate = false;
             gVars.sShips.clear();
             gVars.bCargos.clear();
             gVars.bShips.clear();
             gVars.sCargos.clear();
             gVars.cShips.clear();
+            gVars.rangList.clear();
+            main(null);
         }
     }
 
     public static void createShips(int number, String className, CommandShip targetCShip) {
         for (int i = 0; i < number; i++) {
-            if (autoPopulate) //for ship automatic creation
-                gVars.currentUserInput = Integer.toString((int) Math.ceil(Math.random() * 19 + 1));
-            else {
-                System.out.print("Enter the speed of " + (i + 1) + ". " + className + " (integer between 1 and 20): ");
-                checkUserInput(1, 20, -1);
-            }
             String id;
             switch (className) {
                 case "SmallShip":
                     id = "SmallShip #" + (gVars.sShips.size()+1);
+                    if (autoPopulate) //for ship automatic creation
+                        gVars.currentUserInput = Integer.toString((int) Math.ceil(Math.random() * 149 + 1));
+                    else {
+                        System.out.print("Enter the speed of " + (i + 1) + ". " + className + " (integer between 1 and 20): ");
+                        checkUserInput(1, 150, -1);
+                    }
                     gVars.sShips.put(id, new SmallShip(Integer.parseInt(gVars.currentUserInput)));
                     targetCShip.getsBShips().add(id);
                     break;
                 case "BigShip":
                     id = "BigShip #" + (gVars.bShips.size()+1);
+                    if (autoPopulate) //for ship automatic creation
+                        gVars.currentUserInput = Integer.toString((int) Math.ceil(Math.random() * 349 + 1));
+                    else {
+                        System.out.print("Enter the speed of " + (i + 1) + ". " + className + " (integer between 1 and 20): ");
+                        checkUserInput(1, 350, -1);
+                    }
                     gVars.bShips.put(id, new BigShip(Integer.parseInt(gVars.currentUserInput)));
                     targetCShip.getbBShips().add(id);
                     break;
                 case "CommandShip":
+                    if (autoPopulate) //for ship automatic creation
+                        gVars.currentUserInput = Integer.toString((int) Math.ceil(Math.random() * 199 + 1));
+                    else {
+                        System.out.print("Enter the speed of " + (i + 1) + ". " + className + " (integer between 1 and 20): ");
+                        checkUserInput(1, 200, -1);
+                    }
                     gVars.cShips.put("Player #" + (i + 1), new CommandShip(Integer.parseInt(gVars.currentUserInput)));
                     break;
                 case "SmallCargo":
                     id = "SmallCargo #" + (gVars.sCargos.size()+1);
+                    if (autoPopulate) //for ship automatic creation
+                        gVars.currentUserInput = Integer.toString((int) Math.ceil(Math.random() * 99 + 1));
+                    else {
+                        System.out.print("Enter the speed of " + (i + 1) + ". " + className + " (integer between 1 and 20): ");
+                        checkUserInput(1, 100, -1);
+                    }
                     gVars.sCargos.put(id, new SmallCargo(Integer.parseInt(gVars.currentUserInput)));
                     targetCShip.getsCargos().add(id);
                     break;
                 case "BigCargo":
                     id = "BigCargo #" + (gVars.bCargos.size()+1);
+                    if (autoPopulate) //for ship automatic creation
+                        gVars.currentUserInput = Integer.toString((int) Math.ceil(Math.random() * 199 + 1));
+                    else {
+                        System.out.print("Enter the speed of " + (i + 1) + ". " + className + " (integer between 1 and 20): ");
+                        checkUserInput(1, 200, -1);
+                    }
                     gVars.bCargos.put(id, new BigCargo(Integer.parseInt(gVars.currentUserInput)));
                     targetCShip.getbCargos().add(id);
                     break;
@@ -79,7 +112,12 @@ public class WarShips {
                     mainMenu();
                     break;
                 } else {
-                    System.out.print("Please enter integer between " + downLimit + " and " + (upperLimit == 0 ? Integer.MAX_VALUE : upperLimit) + " (" + (exception == -1 ? "input -1 to quit)" : "except " + exception + " or input -1 to quit)") + ": ");
+                    String including = downLimit == -1 ? "INCLUDING!" : "";
+                    System.out.print("Please enter integer between " + downLimit
+                            + " and " + (upperLimit == 0 ? Integer.MAX_VALUE : upperLimit)
+                            + including + " (" + (exception == -1 ? "input -1 to quit)" : "except "
+                            + exception + " or input -1 to quit)") + ": ");
+                    System.out.println();
                     gVars.currentUserInput = gVars.inputScanner.nextLine();
                 }
             }
@@ -89,12 +127,12 @@ public class WarShips {
     public static void commitAttack(BattleShip atkShip, String defShip_id) {
         CommandShip defShip = gVars.cShips.get(defShip_id);
         String defendingShip_id = null;
-        if(!defShip.getsCargos().isEmpty()){
+        if(defShip.getsCargos().size() > 0){
 
             System.out.println("**Your opponent has some small cargo ships, they need to be destroyed first!**");
             if(defShip.getsCargos().size() == 1) defendingShip_id = defShip.getsCargos().get(0);
             else {
-                System.out.print("Enter number of small cargo ship [0-" + defShip.getsCargos().size() + "]: ");
+                if (!autoPopulate) System.out.print("Enter number of small cargo ship [0-" + (defShip.getsCargos().size()-1) + "]: ");
                 checkUserInput(0,defShip.getsCargos().size()-1,-1);
                 defendingShip_id = defShip.getsCargos().get(Integer.parseInt(gVars.currentUserInput));
             }
@@ -121,12 +159,12 @@ public class WarShips {
                 }
             }
         }
-        else if(!defShip.getbCargos().isEmpty()){
+        else if(defShip.getbCargos().size() > 0){
             System.out.println("**Your opponent has some big cargo ships, they need to be destroyed first!**");
             if(defShip.getbCargos().size() == 1) defendingShip_id = defShip.getbCargos().get(0);
             else {
-                System.out.print("Enter number of small cargo ship [0-" + defShip.getsCargos().size());
-                checkUserInput(0,defShip.getsCargos().size()-1,-1);
+                if (!autoPopulate) System.out.print("Enter number of big cargo ship [0-" + (defShip.getbCargos().size()-1) + "]: ");
+                checkUserInput(0,defShip.getbCargos().size()-1,-1);
                 defendingShip_id = defShip.getbCargos().get(Integer.parseInt(gVars.currentUserInput));
             }
 
@@ -152,12 +190,12 @@ public class WarShips {
                 }
             }
         }
-        else if(!defShip.getsBShips().isEmpty()){
+        else if(defShip.getsBShips().size() > 0){
             System.out.println("Your opponent has some small battle ships, they need to be destroyed first!");
             if(defShip.getsBShips().size() == 1) defendingShip_id = defShip.getsBShips().get(0);
             else {
-                System.out.print("Enter number of small battle ship [0-" + defShip.getsBShips().size());
-                checkUserInput(0,defShip.getsCargos().size()-1,-1);
+                if (!autoPopulate) System.out.print("Enter number of small battle ship [0-" + (defShip.getsBShips().size()-1) + "]: ");
+                checkUserInput(0,defShip.getsBShips().size()-1,-1);
                 defendingShip_id = defShip.getsBShips().get(Integer.parseInt(gVars.currentUserInput));
             }
 
@@ -178,11 +216,11 @@ public class WarShips {
                 }
             }
         }
-        else if(!defShip.getbBShips().isEmpty()){
+        else if(defShip.getbBShips().size() > 0){
             System.out.println("Your opponent has some big battle ships, they need to be destroyed first!");
             if(defShip.getbBShips().size() == 1) defendingShip_id = defShip.getbBShips().get(0);
             else {
-                System.out.print("Enter number of big battle ship [0-" + defShip.getsBShips().size());
+                if (!autoPopulate) System.out.print("Enter number of big battle ship [0-" + (defShip.getsBShips().size()-1) + "]: ");
                 checkUserInput(0,defShip.getbBShips().size()-1,-1);
                 defendingShip_id = defShip.getbBShips().get(Integer.parseInt(gVars.currentUserInput));
             }
@@ -215,7 +253,7 @@ public class WarShips {
                 System.out.println("+++Attack successfull - Dealt damage: " + (oldHealth - defShip.getHealth()) + "+++");
                 if (defShip.getHealth() <= 0) {
                     System.out.println("***"+ defShip_id + " 's ship is destroyed! Player eliminated!***");
-                    gVars.rangList.add(defShip_id);
+                    gVars.rangList.add(defShip_id + " { " + defShip.toString() + " }");
                     gVars.cShips.remove(defShip_id);
                 }
             }
@@ -223,26 +261,45 @@ public class WarShips {
     }
 
     public static void printOtherPlayers(String current) {
-        System.out.println("\n--Players in game:--");
         for(String p_id : gVars.cShips.keySet()){
             if(current!=p_id) System.out.println(p_id + ":" + gVars.cShips.get(p_id).toString());
         }
     }
 
     public static void checkIfCommandShipExists(String current){
+
         gVars.currentUserInput = null;
-        if(autoPopulate) gVars.currentUserInput = Integer.toString((int) Math.ceil(Math.random()*gVars.cShips.size()+1));
-        else gVars.currentUserInput = gVars.inputScanner.nextLine();
-        if(!gVars.cShips.containsKey("Player #" + Integer.parseInt(gVars.currentUserInput)) || current == "Player #" + Integer.parseInt(gVars.currentUserInput)){
-            System.out.print("Invalid command ship id. Enter again: ");
+        Object[] avaiableShips = gVars.cShips.keySet().toArray();
+
+        if(avaiableShips.length==2) { //if there is only two players - choose automatically other
+            gVars.currentUserInput = avaiableShips[0].toString().equals(current)
+                    ? avaiableShips[1].toString() : avaiableShips[0].toString();
+            return;
+        }
+        else if(avaiableShips.length == 1) { // no ships
+            gVars.currentUserInput = null;
+            return;
+        }
+
+        if (!autoPopulate) printOtherPlayers(current);
+        if (!autoPopulate) System.out.print("Enter number of ship to attack[0-" + (avaiableShips.length-1) + "]: ");
+        checkUserInput(-1,avaiableShips.length-1, -1);
+        gVars.currentUserInput = avaiableShips[Integer.parseInt(gVars.currentUserInput)].toString();
+        if(!gVars.cShips.containsKey(gVars.currentUserInput) || current.equals(gVars.currentUserInput)){
+            if (!autoPopulate) System.out.print("Invalid command ship id. Enter again: ");
             checkIfCommandShipExists(current);
         }
     }
 
     public static void main(String[] args) {
-        System.out.println("Welcome to battle ship game!");
 
-        mainMenu();
+        if(gVars == null) gVars = new globalVariables();
+
+        if(!gVars.inGame) {
+            System.out.print("\u001B[35m"); //purple color when not in game
+            System.out.println("Welcome to WarShips by Marko Dojkić!");
+            mainMenu();
+        }
 
         while (gVars.inGame) {
             System.out.println("\nLet`s firstly create command ships!");
@@ -279,66 +336,72 @@ public class WarShips {
                 createShips(Integer.parseInt(gVars.currentUserInput), "BigCargo", currentCShip.getValue());
             }
 
-            System.out.print("If you wanna computer play game by itself input 1 (otherwise click enter): ");
+            System.out.print("If you wanna computer to play game by itself input 0 (otherwise click enter): ");
             gVars.currentUserInput = gVars.inputScanner.nextLine();
-            if(gVars.currentUserInput == null) autoPopulate = false;
+            if(!gVars.currentUserInput.matches("^0")) autoPopulate = false;
 
+            System.out.println("\n--Players in game:--");
             printOtherPlayers(null);
+            Set<String> player_keys = new HashSet<>(); //*
+            player_keys.addAll(gVars.cShips.keySet());
 
-            while (gVars.cShips.size() != 1) {
-                for (String userCommandShip : gVars.cShips.keySet()) {
+            while (gVars.cShips.size() > 1) {
+                for (String userCommandShip : player_keys) {
+                    //Coloring for different player when they play:
+
+                    switch (currentPlayerColor){ //white, red, yellow, green
+                        case "\u001B[37m": currentPlayerColor = "\u001B[31m"; break;
+                        case "\u001B[31m": currentPlayerColor = "\u001B[33m"; break;
+                        case "\u001B[33m": currentPlayerColor = "\u001B[32m"; break;
+                        default: currentPlayerColor = "\u001B[37m"; break;
+                    }
+
+                    System.out.print(currentPlayerColor);
+
+                    if(gVars.cShips.size() == 1) break;
+                    //*next four lines are to create copy of arrays to avoid java.util.ConcurrentModificationException
+                    if(!gVars.cShips.containsKey(userCommandShip)) continue;
+                    ArrayList<String> smallBattleShips_copy = new ArrayList<>(), bigBattleShips_copy = new ArrayList<>();
+                    smallBattleShips_copy.addAll(gVars.cShips.get(userCommandShip).getsBShips());
+                    bigBattleShips_copy.addAll(gVars.cShips.get(userCommandShip).getbBShips());
 
                     System.out.println("*****" + userCommandShip + " is attacking!*****");
 
-                    /*
-                    TODO: FIX:
-
-                    Exception in thread "main" java.util.ConcurrentModificationException
-                        at java.util.ArrayList$Itr.checkForComodification(ArrayList.java:909)
-                        at java.util.ArrayList$Itr.next(ArrayList.java:859)
-                        at markodojkic.warships.WarShips.main(WarShips.java:302)
-                     */
-
-                    for(String userSmallBattleShip : gVars.cShips.get(userCommandShip).getsBShips()){
-                        System.out.println("Attacking with " + userSmallBattleShip);
-                        if(gVars.cShips.size() == 2){
-                            if(userCommandShip == "Player #1") commitAttack(gVars.sShips.get(userSmallBattleShip), "Player #2");
-                            else commitAttack(gVars.sShips.get(userSmallBattleShip), "Player #1");
-                        }
-                        else {
-                            if(!autoPopulate) printOtherPlayers(userCommandShip);
-                            System.out.print("Enter number of ship to attack: ");
+                    for (String userSmallBattleShip : smallBattleShips_copy) {
+                        if(!gVars.cShips.get(userCommandShip).getsBShips().contains(userSmallBattleShip)) continue; //here we are checking if it is somehow destroyed
+                        if(gVars.cShips.size() != 1) {
+                            System.out.println("Attacking with " + userSmallBattleShip);
                             checkIfCommandShipExists(userCommandShip);
-                            commitAttack(gVars.sShips.get(userSmallBattleShip), "Player #" + gVars.currentUserInput);
+                            commitAttack(gVars.sShips.get(userSmallBattleShip), gVars.currentUserInput);
                         }
                     }
 
-                    for(String userBigBattleShip : gVars.cShips.get(userCommandShip).getbBShips()){
-                        System.out.println("Attacking with " + userBigBattleShip);
-                        if(gVars.cShips.size() == 2){
-                            if(userCommandShip == "Player #1") commitAttack(gVars.bShips.get(userBigBattleShip), "Player #2");
-                            else commitAttack(gVars.bShips.get(userBigBattleShip), "Player #1");
-                        }
-                        else {
-                            if(!autoPopulate) printOtherPlayers(userCommandShip);
-                            System.out.print("Enter number of ship to attack: ");
+                    for(String userBigBattleShip : bigBattleShips_copy){
+                        if(!gVars.cShips.get(userCommandShip).getbBShips().contains(userBigBattleShip)) continue; //here we are checking if it is somehow destroyed
+                        if(gVars.cShips.size() != 1) {
+                            System.out.println("Attacking with " + userBigBattleShip);
                             checkIfCommandShipExists(userCommandShip);
-                            commitAttack(gVars.bShips.get(userBigBattleShip), "Player #" + gVars.currentUserInput);
+                            commitAttack(gVars.bShips.get(userBigBattleShip), gVars.currentUserInput);
                         }
                     }
+
+                    checkIfCommandShipExists(userCommandShip);
+                    System.out.println("Attacking with CommandShip");
+                    if(gVars.currentUserInput == null) break;
+                    commitAttack(gVars.cShips.get(userCommandShip), gVars.currentUserInput);
                 }
             }
 
             //GAME OVER SHOW RANG LIST
-            gVars.rangList.add(gVars.cShips.keySet().toArray()[0].toString().split("cs_")[1]);
-            System.out.println("\n GAME OVER:\nResults:");
+            System.out.print("\u001B[34m"); //blue color for rank list
+            gVars.rangList.add(gVars.cShips.keySet().toArray()[0].toString() + " { " + gVars.cShips.get(gVars.cShips.keySet().toArray()[0]).toString() + " }");
+            Collections.reverse(gVars.rangList); //last in is 1. one
+            System.out.println("\n*****GAME OVER:*****\n-Results:-");
             int userRank = 1;
             for (String user : gVars.rangList) {
                 System.out.println(userRank + ". " + user);
                 userRank++;
             }
-            System.out.print("\n<Press enter to return to main menu>: ");
-            gVars.inputScanner.nextLine();
             mainMenu();
         }
     }

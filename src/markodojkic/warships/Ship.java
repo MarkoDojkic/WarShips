@@ -30,8 +30,18 @@ public abstract class Ship {
     public void setShield(int shield) {
         this.shield = shield;
     }
-    
-    public void getDamage(int damage) {
+
+    public void receiveDamage(int damage){
         this.health -= damage;
+        if(this.shield > 0) this.shield--;
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName().split("@")[0] + " {" +
+                "health=" + health +
+                ", speed=" + speed +
+                ", shield=" + shield +
+                '}';
     }
 }

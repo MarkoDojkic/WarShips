@@ -1,4 +1,4 @@
-WarShips by Marko Dojkić - Java console game
+WarShips by Marko Dojkić - Java console game (avaiable to download on my website)
 
 Project for entrance into advanced student's group on faculty. Although only needed things to implement were Ship, BattleShip and Cargo classes at the time, i've gradually created whole game.
 
